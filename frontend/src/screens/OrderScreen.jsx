@@ -8,22 +8,58 @@ import {
   useDeliverOrderMutation,
 } from "../slices/ordersApiSlice";
 import { useSelector } from "react-redux";
-//import { isPending } from "@reduxjs/toolkit";
+import { useEffect, useState } from "react";
 
 const OrderScreen = () => {
   const { id: orderId } = useParams();
-
   const {
     data: order,
     refetch,
     isLoading,
     error,
   } = useGetOrderDetailsQuery(orderId);
-
   const [deliverOrder, { isLoading: loadingDeliver }] =
     useDeliverOrderMutation();
-
   const { userInfo } = useSelector((state) => state.auth);
+
+  // Initialize `isPaid` based on order data
+  const [isPaid, setIsPaid] = useState(order?.isPaid || false);
+
+  useEffect(() => {
+    // Update `isPaid` whenever the order details change
+    if (order) {
+      setIsPaid(order.isPaid);
+    }
+  }, [order]);
+
+  const payOrder = async () => {
+    try {
+      // Simulate a payment process
+      localStorage.setItem(`order_${orderId}_paid`, "true");
+      setIsPaid(true);
+
+      // Make the API call to update the order payment status
+      const response = await fetch(`/api/orders/${orderId}/pay`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          paid: true,
+          paidAt: new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update payment status");
+      }
+
+      toast.success("Payment Successful! Your order has been placed.");
+      refetch();
+    } catch (err) {
+      toast.error("Payment Error: " + err.message);
+    }
+  };
 
   const deliverOrderHandler = async () => {
     try {
@@ -38,7 +74,7 @@ const OrderScreen = () => {
   return isLoading ? (
     <Loader />
   ) : error ? (
-    <Message variant="danger" />
+    <Message variant="danger">{error.data.message}</Message>
   ) : (
     <>
       <h1>Order {order._id}</h1>
@@ -74,8 +110,8 @@ const OrderScreen = () => {
                 <strong>Method:</strong>
                 {order.paymentMethod}
               </p>
-              {order.isPaid ? (
-                <Message variant="success">Paid on {order.paidAt}</Message>
+              {isPaid ? (
+                <Message variant="success">Paid</Message>
               ) : (
                 <Message variant="danger">Not Paid</Message>
               )}
@@ -93,7 +129,7 @@ const OrderScreen = () => {
                       <Link to={`/product/${item.product}`}>{item.name}</Link>
                     </Col>
                     <Col md={4}>
-                      {item.qty} x ${item.price} = ${item.price}
+                      {item.qty} x ${item.price} = ${item.qty * item.price}
                     </Col>
                   </Row>
                 </ListGroup.Item>
@@ -129,30 +165,30 @@ const OrderScreen = () => {
                   <Col>${order.totalPrice}</Col>
                 </Row>
               </ListGroup.Item>
-              {!order.isPaid && (
+              {!isPaid && (
                 <ListGroup.Item>
-                  <div>
-                    <Button type="submit" variant="primary" className="my-2">
-                      Pay Now
-                    </Button>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    className="my-2"
+                    onClick={payOrder}
+                  >
+                    Pay Now
+                  </Button>
                 </ListGroup.Item>
               )}
               {loadingDeliver && <Loader />}
-              {userInfo &&
-                userInfo.isAdmin &&
-                order.isPaid &&
-                !order.isDelivered && (
-                  <ListGroup.Item>
-                    <Button
-                      type="button"
-                      className="btn btn-block"
-                      onClick={deliverOrderHandler}
-                    >
-                      Mark As Delivered
-                    </Button>
-                  </ListGroup.Item>
-                )}
+              {userInfo && userInfo.isAdmin && isPaid && !order.isDelivered && (
+                <ListGroup.Item>
+                  <Button
+                    type="button"
+                    className="btn btn-block"
+                    onClick={deliverOrderHandler}
+                  >
+                    Mark As Delivered
+                  </Button>
+                </ListGroup.Item>
+              )}
             </ListGroup>
           </Card>
         </Col>
