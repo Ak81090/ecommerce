@@ -26,6 +26,7 @@ const PaymentScreen = () => {
     dispatch(savePaymentMethod(paymetMethod));
     navigate("/placeorder");
   };
+
   return (
     <FormContainer>
       <CheckoutSteps step1 step2 step3 />
@@ -46,10 +47,10 @@ const PaymentScreen = () => {
             ></Form.Check>
           </Col>
         </Form.Group>
-
+       
         <Button type="submit" variant="primary">
           Continue
-        </Button>
+        </Button> 
       </Form>
     </FormContainer>
   );

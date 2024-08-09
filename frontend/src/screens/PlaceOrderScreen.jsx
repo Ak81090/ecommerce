@@ -42,7 +42,8 @@ const PlaceOrderScreen = () => {
     } catch (error) {
       toast.error(error);
     }
-  };
+  }; 
+  
 
   return (
     <>
@@ -136,6 +137,9 @@ const PlaceOrderScreen = () => {
                 )}
               </ListGroup.Item>
               <ListGroup.Item>
+
+            
+
                 <Button
                   type='button'
                   className='btn-block'
@@ -143,7 +147,7 @@ const PlaceOrderScreen = () => {
                   onClick={placeOrderHandler}
                 >
                   Place Order
-                </Button>
+                </Button> 
                 {isLoading && <Loader />}
               </ListGroup.Item>
             </ListGroup>

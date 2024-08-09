@@ -9,6 +9,7 @@ import { FaTimes } from "react-icons/fa";
 import { useProfileMutation } from "../slices/usersApiSlice";
 import { setCredentials } from "../slices/authSlice";
 import { useGetMyOrdersQuery } from "../slices/ordersApiSlice";
+
 const ProfileScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,25 +17,23 @@ const ProfileScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const dispatch = useDispatch();
-
   const { userInfo } = useSelector((state) => state.auth);
 
   const [updateProfile, { isLoading: loadingUpdateProfile }] =
     useProfileMutation();
-
-  const { data: orders, isLoading, error } = useGetMyOrdersQuery();
+  const { data: orders = [], isLoading, error } = useGetMyOrdersQuery();
 
   useEffect(() => {
     if (userInfo) {
       setName(userInfo.name);
       setEmail(userInfo.email);
     }
-  }, [userInfo, userInfo.name, userInfo.email]);
+  }, [userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      toast.error("Password do not match");
+      toast.error("Passwords do not match");
     } else {
       try {
         const res = await updateProfile({
@@ -58,9 +57,9 @@ const ProfileScreen = () => {
 
         <Form onSubmit={submitHandler}>
           <Form.Group controlId="name" className="my-2">
-            <Form.Label>Nmae</Form.Label>
+            <Form.Label>Name</Form.Label>
             <Form.Control
-              type="name"
+              type="text"
               placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -104,7 +103,7 @@ const ProfileScreen = () => {
         </Form>
       </Col>
       <Col md={9}>
-        <h2>My Order</h2>
+        <h2>My Orders</h2>
         {isLoading ? (
           <Loader />
         ) : error ? (
@@ -117,7 +116,7 @@ const ProfileScreen = () => {
               <tr>
                 <th>ID</th>
                 <th>DATE</th>
-                <th>TOATAL</th>
+                <th>TOTAL</th>
                 <th>PAID</th>
                 <th>DELIVERED</th>
                 <th></th>
@@ -126,25 +125,35 @@ const ProfileScreen = () => {
             <tbody>
               {orders.map((order) => (
                 <tr key={order._id}>
-                  <td>{order.id}</td>
-                  <td>{order.createdAt.substring(0, 10)}</td>
+                  <td>{order._id}</td>
+                  <td>
+                    {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
+                  </td>
                   <td>${order.totalPrice}</td>
                   <td>
                     {order.isPaid ? (
-                      order.paidAt.substring(0, 10)
+                      order.paidAt ? (
+                        order.paidAt.substring(0, 10)
+                      ) : (
+                        "N/A"
+                      )
                     ) : (
                       <FaTimes style={{ color: "red" }} />
                     )}
                   </td>
                   <td>
                     {order.isDelivered ? (
-                      order.deliveredAt.substring(0, 10)
+                      order.deliveredAt ? (
+                        order.deliveredAt.substring(0, 10)
+                      ) : (
+                        "N/A"
+                      )
                     ) : (
                       <FaTimes style={{ color: "red" }} />
                     )}
                   </td>
                   <td>
-                    <LinkContainer to={`/order/${order.id}`}>
+                    <LinkContainer to={`/order/${order._id}`}>
                       <Button className="btn-sm" variant="light">
                         Details
                       </Button>
